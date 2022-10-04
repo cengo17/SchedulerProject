@@ -1,6 +1,7 @@
-import React, {useState, useRef} from 'react';
+import React, {useState} from 'react';
 import {Calendar} from 'react-native-big-calendar';
 import 'dayjs/locale/tr';
+import 'dayjs'
 import {
   View,
   Text,
@@ -12,9 +13,12 @@ import {
 import {Hoshi} from 'react-native-textinput-effects';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import CalendarPicker from 'react-native-calendar-picker';
-import {v4 as uuidv4} from 'uuid';
+//import {v4 as uuidv4} from 'uuid';
+import { v4 as uuid } from 'uuid';
 
-export default function App() {
+import DatePicker from 'react-native-date-picker'
+import moment from 'moment';
+export default function HomeScreen() {
   const darkTheme = {
     palette: {
       primary: {
@@ -44,15 +48,23 @@ export default function App() {
   const [selectedEndDate, setSelectedEndDate] = useState(null);
 
   const [selectedEventId, setSelectedEventId] = useState(null);
-
+  const [open, setOpen] = useState(false)
+  const [openEnd, setOpenEnd] = useState(false)
+  const [startsTime, setStartTimes] = useState(null)
+  const [endTime, setEndTime] = useState(null)
   const minDate = new Date(); // Today
-  const maxDate = new Date(2100, 12, 25);
-  const onDateChange = (date, type) => {
+  const maxDate = new Date(2100, 12, 25, 10,10);
+  const onDateChange = (date, type,startTime,endTimes) => {
     if (type === 'END_DATE') {
-      setSelectedEndDate( date ? date.toDate() : date);
+      setSelectedEndDate(date);
+      setStartTimes(moment.unix(startTime).format('HH:mm'));
+      setEndTime(moment.unix(endTimes).format('HH:mm'));
     } else {
-      setSelectedStartDate( date ? date.toDate() : date);
+      setSelectedStartDate(date);
+      setStartTimes(moment.unix(startTime).format('HH:mm'));
+      setEndTime(moment.unix(endTimes).format('HH:mm'));
     }
+    console.log('MAARRR', type);
   };
 
   const saveEvent = () => {
@@ -78,17 +90,19 @@ export default function App() {
       setEvents([
         ...events,
         {
-          id: uuidv4(),
+          id: uuid(),
           title: name,
           start: selectedStartDate,
           end: selectedEndDate,
+          time: startsTime,
+          endTime: endTime,
         },
       ]);
     } else {
       // edit event
 
       let selectedEventIndex = events.findIndex(
-        event => event.id === selectedEventId,
+        event => event.id === selectedEventId
       );
 
       if (selectedEventIndex !== -1) {
@@ -98,16 +112,21 @@ export default function App() {
           title: name,
           start: selectedStartDate,
           end: selectedEndDate,
+          time: startsTime,
+          endTime: endTime,
         };
 
         setEvents([...tempArrEvents]);
       }
+      //event => event.id === selectedEventId,
       setSelectedEventId(null);
     }
 
     setName('');
     setSelectedStartDate(null);
     setSelectedEndDate(null);
+    setStartTimes(null);
+    setEndTime(null);
   };
 
   const handleEvent = currentEvent => {
@@ -139,10 +158,12 @@ export default function App() {
     setModalVisible(!modalVisible);
     setSelectedStartDate(null);
     setSelectedEndDate(null);
+    setStartTimes(null);
+    setEndTime(null);
     setName(currentEvent.title);
     setSelectedEventId(currentEvent.id);
   };
-
+  console.log('DAAAM', events);
   return (
     <>
       <View style={{height: 130, marginTop: 50}}>
@@ -193,7 +214,7 @@ export default function App() {
                 width: '90%',
                 marginRight: 'auto',
                 marginLeft: 'auto',
-                marginTop: '3%',
+                marginTop: '2%',
               }}>
               <Hoshi
                 label={'Başlık giriniz'}
@@ -218,13 +239,13 @@ export default function App() {
                 }}
                 type={'custom'}
                 value={name}
-                onChangeText={name => setName(name)}
+                onChangeText={names => setName(names)}
               />
             </View>
             <Text style={styles.modalText1}>TARİH SEÇİNİZ</Text>
             <CalendarPicker
-              selectedStartDate = {selectedStartDate}
-              selectedEndDate = {selectedEndDate}
+              selectedStartDate={selectedStartDate}
+              selectedEndDate={selectedEndDate}
               allowRangeSelection={true}
               minDate={minDate}
               maxDate={maxDate}
@@ -251,6 +272,52 @@ export default function App() {
               previousTitle={'Geri'}
               onDateChange={onDateChange}
               handleOnPressDay={data => console.log('handleOnPressDay', data)}
+            />
+            <TouchableOpacity onPress={() => setOpen(true)}>
+              <Text style={styles.modalText1}>SAAT SEÇİNİZ</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setOpenEnd(true)}>
+              <Text style={styles.modalText1}>BİTİŞ SAATİ SEÇİNİZ</Text>
+            </TouchableOpacity>
+            <DatePicker
+              cancelText={'İptal'}
+              title={'Saat Seçiniz'}
+              confirmText={'Onayla'}
+              modal
+              mode={'time'}
+              minDate={minDate}
+              maxDate={maxDate}
+              open={open}
+              //onDateChange={onDateChange}
+              date={minDate}
+              theme={'auto'}
+              onConfirm={(time) => {
+                setOpen(false)
+                onDateChange(time)
+              }}
+              onCancel={() => {
+                setOpen(false)
+              }}
+            />
+            <DatePicker
+              cancelText={'İptal'}
+              title={'Bitiş Saati Seçiniz'}
+              confirmText={'Onayla'}
+              modal
+              minDate={minDate}
+              maxDate={maxDate}
+              open={openEnd}
+              mode={'time'}
+              //onDateChange={onDateChange}
+              date={minDate}
+              theme={'auto'}
+              onConfirm={(endTimes) => {
+                setOpenEnd(false)
+                onDateChange(endTimes)
+              }}
+              onCancel={() => {
+                setOpen(false)
+              }}
             />
             <TouchableOpacity
               onPress={() => saveEvent()}
@@ -280,13 +347,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,
-    height: 250,
+    height: 650,
   },
   modalView: {
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
-    height: 600,
+    height: 650,
     width: '98%',
     alignItems: 'center',
     shadowColor: '#000',
@@ -336,13 +403,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: RFPercentage(2),
     marginTop: '5%',
   },
   modalText1: {
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize:  RFPercentage(2),
     marginTop: '5%',
     marginBottom: '5%',
   },

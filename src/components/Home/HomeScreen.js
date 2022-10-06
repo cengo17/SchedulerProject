@@ -383,7 +383,6 @@ export default function HomeScreen() {
               minDate={minDate}
               maxDate={maxDate}
               open={open}
-              //onDateChange={onDateChange}
               date={startsTime?.toDate() || minDate}
               theme={'auto'}
               onConfirm={time => {

@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Calendar} from 'react-native-big-calendar';
 import 'dayjs/locale/tr';
-import 'dayjs'
+import 'dayjs';
 import {
   View,
   Text,
@@ -9,14 +9,15 @@ import {
   Modal,
   Alert,
   StyleSheet,
+  Image,
 } from 'react-native';
 import {Hoshi} from 'react-native-textinput-effects';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import CalendarPicker from 'react-native-calendar-picker';
 //import {v4 as uuidv4} from 'uuid';
-import { v4 as uuid } from 'uuid';
+import {v4 as uuid} from 'uuid';
 
-import DatePicker from 'react-native-date-picker'
+import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 export default function HomeScreen() {
   const darkTheme = {
@@ -43,47 +44,102 @@ export default function HomeScreen() {
   const [events, setEvents] = useState([]);
   const [changeTime, setChangeTime] = useState('custom');
   const [modalVisible, setModalVisible] = useState(false);
-  const [name, setName] = useState(false);
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
+  const [name, setName] = useState('');
+
 
   const [selectedEventId, setSelectedEventId] = useState(null);
-  const [open, setOpen] = useState(false)
-  const [openEnd, setOpenEnd] = useState(false)
-  const [startsTime, setStartTimes] = useState(null)
-  const [endTime, setEndTime] = useState(null)
+  const [open, setOpen] = useState(false);
+  const [openEnd, setOpenEnd] = useState(false);
+  const [startsTime, setStartTimes] = useState(null);
+  const [endTime, setEndTime] = useState(null);
   const minDate = new Date(); // Today
-  const maxDate = new Date(2100, 12, 25, 10,10);
-  const onDateChange = (date, type,startTime,endTimes) => {
-    if (type === 'END_DATE') {
-      setSelectedEndDate(date);
-      setStartTimes(moment.unix(startTime).format('HH:mm'));
-      setEndTime(moment.unix(endTimes).format('HH:mm'));
-    } else {
-      setSelectedStartDate(date);
-      setStartTimes(moment.unix(startTime).format('HH:mm'));
-      setEndTime(moment.unix(endTimes).format('HH:mm'));
+  const maxDate = new Date(2100, 12, 25, 10, 10);
+
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const onDateChange = (date, type, startTime, endTimes) => {
+    if (type === 'START') {
+      setStartTimes(moment(date));
+    } else if (type === 'END') {
+      if (startsTime && startsTime.valueOf() > moment(date).valueOf()) {
+        Alert.alert(
+          'Bitiş zamanı başlangıç zamanından büyük olamaz !!!',
+          null,
+          [
+            {
+              text: 'Kapat',
+              onPress: () => console.log('Kapat'),
+              style: 'cancel',
+            },
+          ],
+        );
+      } else if (
+        startsTime &&
+        moment(date).valueOf() - startsTime.valueOf() < 60000
+      ) {
+        Alert.alert(
+          'Bitiş zamanı ile başlangıç zamanı arası en az 1dk olmalıdır !!!',
+          null,
+          [
+            {
+              text: 'Kapat',
+              onPress: () => console.log('Kapat'),
+              style: 'cancel',
+            },
+          ],
+        );
+      } else {
+        setEndTime(moment(date));
+      }
     }
-    console.log('MAARRR', type);
   };
 
   const saveEvent = () => {
     if (!name) {
-      // eslint-disable-next-line no-alert
-      alert('You should be enter the title!');
+      Alert.alert('İsim seçmelisiniz', null, [
+        {
+          text: 'Tamam',
+          onPress: () => console.log('Kapat'),
+          style: 'cancel',
+        },
+      ]);
       return;
     }
-    if (!selectedStartDate) {
-      // eslint-disable-next-line no-alert
-      alert('You should be enter the start date!');
+    if (!startsTime) {
+      Alert.alert('Başlangıç saati seçmelisiniz', null, [
+        {
+          text: 'Tamam',
+          onPress: () => console.log('Kapat'),
+          style: 'cancel',
+        },
+      ]);
       return;
     }
-    if (!selectedEndDate) {
-      // eslint-disable-next-line no-alert
-      alert('You should be enter the end date!');
+    if (!endTime) {
+      Alert.alert('Bitiş saati seçmelisiniz', null, [
+        {
+          text: 'Tamam',
+          onPress: () => console.log('Kapat'),
+          style: 'cancel',
+        },
+      ]);
       return;
     }
     setModalVisible(!modalVisible);
+
+    const start = selectedDate.clone();
+    start.set({
+      hour: startsTime.hour(),
+      minute: startsTime.minutes(),
+    });
+    const end = selectedDate.clone();
+
+    end.set({
+      hour: endTime.hour(),
+      minute: endTime.minutes(),
+    });
+
+    console.log(selectedEventId, 'asdasdasdasdasdasd');
 
     if (!selectedEventId) {
       // new event
@@ -92,28 +148,24 @@ export default function HomeScreen() {
         {
           id: uuid(),
           title: name,
-          start: selectedStartDate,
-          end: selectedEndDate,
-          time: startsTime,
-          endTime: endTime,
+          start,
+          end,
         },
       ]);
     } else {
       // edit event
 
       let selectedEventIndex = events.findIndex(
-        event => event.id === selectedEventId
+        event => event.id === selectedEventId,
       );
 
       if (selectedEventIndex !== -1) {
         let tempArrEvents = [...events];
         tempArrEvents[selectedEventIndex] = {
-          id: selectedEventIndex,
+          id: tempArrEvents[selectedEventIndex].id,
           title: name,
-          start: selectedStartDate,
-          end: selectedEndDate,
-          time: startsTime,
-          endTime: endTime,
+          start,
+          end,
         };
 
         setEvents([...tempArrEvents]);
@@ -123,10 +175,11 @@ export default function HomeScreen() {
     }
 
     setName('');
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
     setStartTimes(null);
     setEndTime(null);
+    setSelectedDate(null);
+    setOpenEnd(false);
+    setOpen(false);
   };
 
   const handleEvent = currentEvent => {
@@ -145,6 +198,11 @@ export default function HomeScreen() {
           onPress: () => deleteHandleEvent(currentEvent),
           style: 'cancel',
         },
+        {
+          text: 'Kapat',
+          onPress: () => console.log('Kapat'),
+          style: 'cancel',
+        },
       ],
       {cancelable: false},
     );
@@ -155,15 +213,31 @@ export default function HomeScreen() {
   };
 
   const editHandleEvent = currentEvent => {
+    const currentSelectedDate = moment(currentEvent.start).set({
+      hour: 0,
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    });
+
     setModalVisible(!modalVisible);
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
-    setStartTimes(null);
-    setEndTime(null);
+    setSelectedDate(currentSelectedDate);
+    setStartTimes(moment(currentEvent.start));
+    setEndTime(moment(currentEvent.end));
     setName(currentEvent.title);
     setSelectedEventId(currentEvent.id);
   };
-  console.log('DAAAM', events);
+
+  const handleCreateNewEvent = selectedDate => {
+    const currentDate = moment(selectedDate).set({
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+      hour: 0,
+    });
+    setModalVisible(!modalVisible);
+    setSelectedDate(currentDate);
+  };
   return (
     <>
       <View style={{height: 130, marginTop: 50}}>
@@ -192,10 +266,10 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity
           onPress={() => {
-            setModalVisible(true);
+            setSwipe(true);
           }}
           style={styles.desc}>
-          <Text style={styles.texti}>OLAY EKLE</Text>
+          <Text style={styles.texti}>İSİM EKLE</Text>
         </TouchableOpacity>
       </View>
       <Modal
@@ -208,7 +282,28 @@ export default function HomeScreen() {
         }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>OLAY EKLE</Text>
+            <TouchableOpacity
+              style={{marginLeft: 'auto'}}
+              onPress={() => {
+                setModalVisible(!modalVisible);
+                setEndTime(null);
+                setStartTimes(null);
+                setSelectedDate(null);
+                setName('');
+              }}>
+              <Image
+                style={{
+                  width: 20,
+                  height: 20,
+                  padding: 10,
+                  marginLeft: 'auto',
+                  marginTop: '3%',
+                  marginRight: 15,
+                }}
+                source={require('../images/close.png')}
+              />
+            </TouchableOpacity>
+            <Text style={styles.modalText}>İSİM EKLE</Text>
             <View
               style={{
                 width: '90%',
@@ -217,7 +312,7 @@ export default function HomeScreen() {
                 marginTop: '2%',
               }}>
               <Hoshi
-                label={'Başlık giriniz'}
+                label={'İsim giriniz'}
                 borderColor={'#55C1C3'}
                 autoCapitalize={'words'}
                 returnKeyType="done"
@@ -242,11 +337,11 @@ export default function HomeScreen() {
                 onChangeText={names => setName(names)}
               />
             </View>
-            <Text style={styles.modalText1}>TARİH SEÇİNİZ</Text>
-            <CalendarPicker
+            {/* <Text style={styles.modalText1}>TARİH SEÇİNİZ</Text>*/}
+            {/*<CalendarPicker
               selectedStartDate={selectedStartDate}
               selectedEndDate={selectedEndDate}
-              allowRangeSelection={true}
+              allowRangeSelection={false}
               minDate={minDate}
               maxDate={maxDate}
               todayBackgroundColor="#f2e6ff"
@@ -272,16 +367,16 @@ export default function HomeScreen() {
               previousTitle={'Geri'}
               onDateChange={onDateChange}
               handleOnPressDay={data => console.log('handleOnPressDay', data)}
-            />
+            />*/}
             <TouchableOpacity onPress={() => setOpen(true)}>
-              <Text style={styles.modalText1}>SAAT SEÇİNİZ</Text>
+              <Text style={styles.modalText1}>BAŞLANGIÇ SAATİ SEÇİNİZ</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setOpenEnd(true)}>
               <Text style={styles.modalText1}>BİTİŞ SAATİ SEÇİNİZ</Text>
             </TouchableOpacity>
             <DatePicker
               cancelText={'İptal'}
-              title={'Saat Seçiniz'}
+              title={'Başlangıç Saati Seçiniz'}
               confirmText={'Onayla'}
               modal
               mode={'time'}
@@ -289,14 +384,14 @@ export default function HomeScreen() {
               maxDate={maxDate}
               open={open}
               //onDateChange={onDateChange}
-              date={minDate}
+              date={startsTime?.toDate() || minDate}
               theme={'auto'}
-              onConfirm={(time) => {
-                setOpen(false)
-                onDateChange(time)
+              onConfirm={time => {
+                setOpen(false);
+                onDateChange(time, 'START');
               }}
               onCancel={() => {
-                setOpen(false)
+                setOpen(false);
               }}
             />
             <DatePicker
@@ -309,16 +404,20 @@ export default function HomeScreen() {
               open={openEnd}
               mode={'time'}
               //onDateChange={onDateChange}
-              date={minDate}
+              date={endTime?.toDate() || minDate}
               theme={'auto'}
-              onConfirm={(endTimes) => {
-                setOpenEnd(false)
-                onDateChange(endTimes)
+              onConfirm={endTimes => {
+                setOpenEnd(false);
+                onDateChange(endTimes, 'END');
               }}
               onCancel={() => {
-                setOpen(false)
+                setOpenEnd(false);
               }}
             />
+
+            {startsTime && <Text>{startsTime.format('HH:mm')}</Text>}
+
+            {endTime && <Text>{endTime.format('HH:mm')}</Text>}
             <TouchableOpacity
               onPress={() => saveEvent()}
               style={styles.nexButton}>
@@ -336,6 +435,7 @@ export default function HomeScreen() {
         mode={changeTime}
         events={events}
         height={600}
+        onPressCell={selectedDate => handleCreateNewEvent(selectedDate)}
         onPressEvent={event => handleEvent(event)}
       />
     </>
@@ -409,7 +509,7 @@ const styles = StyleSheet.create({
   modalText1: {
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize:  RFPercentage(2),
+    fontSize: RFPercentage(2),
     marginTop: '5%',
     marginBottom: '5%',
   },
@@ -418,6 +518,7 @@ const styles = StyleSheet.create({
     height: 50,
     width: '33%',
     borderRadius: 25,
+
   },
   desc: {
     backgroundColor: 'gray',

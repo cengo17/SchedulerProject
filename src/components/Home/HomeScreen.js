@@ -9,8 +9,8 @@ import {
   Modal,
   Alert,
   StyleSheet,
-  Image,
-} from 'react-native';
+  Image, StatusBar,
+} from "react-native";
 import {Hoshi} from 'react-native-textinput-effects';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import CalendarPicker from 'react-native-calendar-picker';
@@ -20,29 +20,16 @@ import {v4 as uuid} from 'uuid';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 export default function HomeScreen() {
-  const darkTheme = {
-    palette: {
-      primary: {
-        main: '#6185d0',
-        contrastText: '#000',
-      },
-      gray: {
-        100: '#333',
-        200: '#666',
-        300: '#888',
-        500: '#aaa',
-        800: '#ccc',
-      },
-    },
-  };
+
   const Mode = {
     type: 'day',
     type2: 'month',
     type3: 'week',
+    backgroundColor: 'red',
   };
 
   const [events, setEvents] = useState([]);
-  const [changeTime, setChangeTime] = useState('custom');
+  const [changeTime, setChangeTime] = useState('week');
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
 
@@ -175,8 +162,8 @@ export default function HomeScreen() {
     }
 
     setName('');
-    setStartTimes(null);
-    setEndTime(null);
+    setStartTimes(moment().set({ "minutes": 0 }));
+    setEndTime(moment().add(1,"hours").set({ "minutes": 0 }));
     setSelectedDate(null);
     setOpenEnd(false);
     setOpen(false);
@@ -235,35 +222,63 @@ export default function HomeScreen() {
       millisecond: 0,
       hour: 0,
     });
-    setModalVisible(!modalVisible);
     setSelectedDate(currentDate);
+    setModalVisible(!modalVisible);
+
+  };
+ const BORDER_COLOR = '#cedde7'
+ const BACKGROUND_COLOR = '#088ad9'
+ const CELL_COLOR = '#fafafa'
+ const HEADER_COLOR = '#088ad9'
+ const TEXT_COLOR = 'black'
+ const INDICATOR_COLOR = '#e5e5e5'
+ const WEEKTEXT_COLOR = '#fff'
+ const HOUR_COLOR = 'black'
+ const BORDERBOTTOMHEADER_COLOR = '#22a199'
+ const EVENTCELL_COLOR = '#088ad9'
+  const darkTheme = {
+    palette: {
+      primary: {
+        main: INDICATOR_COLOR,
+        contrastText: '#000',
+      },
+      gray: {
+        100: WEEKTEXT_COLOR,
+        200: WEEKTEXT_COLOR,
+        300: WEEKTEXT_COLOR,
+        500: WEEKTEXT_COLOR,
+        800: WEEKTEXT_COLOR,
+      },
+    },
   };
   return (
     <>
-      <View style={{height: 130, marginTop: 50}}>
-        <View style={{flexDirection: 'row'}}>
+      <View>
+        <StatusBar hidden />
+        <View style={{flexDirection: 'row', borderBottomColor: BORDERBOTTOMHEADER_COLOR, borderBottomWidth: 5}}>
           <TouchableOpacity
             onPress={() => {
               setChangeTime(Mode.type);
             }}
-            style={styles.touchStyle}>
-            <Text style={styles.texti}>GÜN</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setChangeTime(Mode.type2);
-            }}
-            style={styles.touchStyle}>
-            <Text style={styles.texti}>HAFTA</Text>
+            style={[styles.touchStyle, { backgroundColor: changeTime ===   Mode.type ? BACKGROUND_COLOR : null}]}>
+            <Text style={[styles.texti,{color: changeTime === Mode.type ? '#fff': '#111'}]}>GÜN</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
               setChangeTime(Mode.type3);
             }}
-            style={styles.touchStyle}>
-            <Text style={styles.texti}>AY</Text>
+            style={[styles.touchWStyle,{ borderColor: BORDER_COLOR, backgroundColor: changeTime === Mode.type3  ? BACKGROUND_COLOR : null}]}>
+            <Text style={[styles.texti, {color: changeTime === Mode.type3 ? '#fff': '#111'}]}>HAFTA</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setChangeTime(Mode.type2);
+            }}
+            style={[styles.touchStyle ,{ backgroundColor: changeTime === Mode.type2  ? BACKGROUND_COLOR : null}]}>
+            <Text style={[styles.texti,{color: changeTime === Mode.type2 ? '#fff': '#111'}]}>AY</Text>
           </TouchableOpacity>
         </View>
+       {/* <View style={{width: '100%', borderColor: 'orange', borderWidth: 1}}/>*/}
        {/* <TouchableOpacity
           onPress={() => {
             setSwipe(true);
@@ -283,27 +298,27 @@ export default function HomeScreen() {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <TouchableOpacity
-              style={{marginLeft: 'auto'}}
+              style={{marginRight: 'auto', flexDirection: 'row',width: '100%', justifyContent: 'center'}}
               onPress={() => {
                 setModalVisible(!modalVisible);
-                setEndTime(null);
-                setStartTimes(null);
+                setEndTime(moment().add(1,"hours").set({ "minutes": 0 }));
+                setStartTimes(moment().set({ "minutes": 0 }));
                 setSelectedDate(null);
                 setName('');
               }}>
               <Image
                 style={{
-                  width: 20,
-                  height: 20,
+                  width: 30,
+                  height: 10,
                   padding: 10,
-                  marginLeft: 'auto',
                   marginTop: '3%',
-                  marginRight: 15,
+                  position: 'absolute',
+                  left: 10
                 }}
-                source={require('../images/close.png')}
+                source={require('../images/arrow.png')}
               />
+              <Text style={styles.modalText}>RANDEVU EKLE</Text>
             </TouchableOpacity>
-            <Text style={styles.modalText}>İSİM EKLE</Text>
             <View
               style={{
                 width: '90%',
@@ -312,7 +327,7 @@ export default function HomeScreen() {
                 marginTop: '2%',
               }}>
               <Hoshi
-                label={'İsim giriniz'}
+                label={'Lütfen Notunuzu giriniz'}
                 borderColor={'#55C1C3'}
                 autoCapitalize={'words'}
                 returnKeyType="done"
@@ -373,9 +388,11 @@ export default function HomeScreen() {
               title={'Başlangıç Saati Seçiniz'}
               confirmText={'Onayla'}
               modal
+              is24hourSource={true}
               mode={'time'}
               minDate={minDate}
               maxDate={maxDate}
+              locale={'fr'}
               open={open}
               date={startsTime?.toDate() || minDate}
               theme={'auto'}
@@ -392,9 +409,11 @@ export default function HomeScreen() {
               title={'Bitiş Saati Seçiniz'}
               confirmText={'Onayla'}
               modal
+              is24hourSource={'locale'}
               minDate={minDate}
               maxDate={maxDate}
               open={openEnd}
+              locale={'fr'}
               mode={'time'}
               //onDateChange={onDateChange}
               date={endTime?.toDate() || minDate}
@@ -410,26 +429,38 @@ export default function HomeScreen() {
 
             <View style={{flexDirection: 'row', marginTop: '8%'}}>
               <TouchableOpacity style={{marginRight: 15, width: '45%'}} onPress={() => setOpen(true)}>
-                <Text style={styles.modalText1}>BAŞLANGIÇ SAATİ SEÇİNİZ</Text>
-                {startsTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2.5), color: '#333', fontWeight: 'bold'}}>{startsTime.format('HH:mm')}</Text>}
+                <Text style={[styles.modalText1,{borderBottomWidth: 1, borderBottomColor: 'red'}]}>Başlangıç</Text>
+                {startsTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2), color: '#333'}}>{startsTime.format('HH:mm')}</Text>}
               </TouchableOpacity>
+              <Text style={{position: 'absolute', marginTop: '11%', marginLeft: '44%'}}>------</Text>
               <TouchableOpacity style={{marginLeft: 15, marginTop: 2, width: '45%'}} onPress={() => setOpenEnd(true)}>
-                <Text style={styles.modalText1}>BİTİŞ SAATİ SEÇİNİZ</Text>
-                {endTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2.5), color: '#333', fontWeight: 'bold'}}>{endTime.format('HH:mm')}</Text>}
+                <Text style={styles.modalText1}>Bitiş</Text>
+                {endTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2), color: '#333'}}>{endTime.format('HH:mm')}</Text>}
               </TouchableOpacity>
             </View>
             <TouchableOpacity
               onPress={() => saveEvent()}
               style={styles.nexButton}>
-              <Text style={styles.textStyle1}>Kaydet</Text>
+              <Text style={styles.textStyle1}>Oluştur</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       <Calendar
+         //bodyContainerStyle={{backgroundColor: 'gray'}}
+        headerContentStyle={{backgroundColor: HEADER_COLOR, borderColor: BORDER_COLOR, marginTop: -2}}
+          calendarCellStyle={{backgroundColor: CELL_COLOR, borderColor: BORDER_COLOR}}
+         hourStyle={{ color: HOUR_COLOR }}
+        eventCellStyle={{ backgroundColor: EVENTCELL_COLOR }}
+        //dayHeaderStyle={{backgroundColor: 'blue'}}
+        showAllDayEventCell={false}
         moreLabel={true}
         showTime={true}
+        hideNowIndicator={true}
+        weekDayHeaderHighlightColor={WEEKTEXT_COLOR}
+
         theme={darkTheme}
+        dayHeaderHighlightColor={TEXT_COLOR}
         locale={'tr'}
         swipeEnabled={true}
         mode={changeTime}
@@ -437,6 +468,7 @@ export default function HomeScreen() {
         height={600}
         onPressCell={selectedDate => handleCreateNewEvent(selectedDate)}
         onPressEvent={event => handleEvent(event)}
+
       />
     </>
   );
@@ -453,8 +485,8 @@ const styles = StyleSheet.create({
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 20,
-    height: 650,
-    width: '98%',
+    height: 350,
+    width: '65%',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
@@ -496,28 +528,34 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     borderRadius: 15,
     height: 50,
-    backgroundColor: '#24D4A4',
+    backgroundColor: '#088ad9',
     marginBottom: '5%',
   },
   modalText: {
-    marginBottom: 15,
     textAlign: 'center',
-    fontWeight: 'bold',
     fontSize: RFPercentage(2),
-    marginTop: '5%',
+    marginTop: '3%',
   },
   modalText1: {
     textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: RFPercentage(2),
+    fontSize: RFPercentage(1.8),
     marginTop: '5%',
     marginBottom: '5%',
+    color: '#868686'
   },
   touchStyle: {
-    backgroundColor: 'gray',
+    //backgroundColor: 'gray',
+    height: 50,
+    width: '34%',
+  },
+  touchWStyle: {
+    //backgroundColor: 'gray',
     height: 50,
     width: '33%',
-    borderRadius: 25,
+   // borderRadius: 25,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+   // borderColor: BORDER_COLOR
 
   },
   desc: {

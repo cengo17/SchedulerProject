@@ -264,13 +264,13 @@ export default function HomeScreen() {
             <Text style={styles.texti}>AY</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
+       {/* <TouchableOpacity
           onPress={() => {
             setSwipe(true);
           }}
           style={styles.desc}>
           <Text style={styles.texti}>İSİM EKLE</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>*/}
       </View>
       <Modal
         animationType="slide"
@@ -368,12 +368,6 @@ export default function HomeScreen() {
               onDateChange={onDateChange}
               handleOnPressDay={data => console.log('handleOnPressDay', data)}
             />*/}
-            <TouchableOpacity onPress={() => setOpen(true)}>
-              <Text style={styles.modalText1}>BAŞLANGIÇ SAATİ SEÇİNİZ</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setOpenEnd(true)}>
-              <Text style={styles.modalText1}>BİTİŞ SAATİ SEÇİNİZ</Text>
-            </TouchableOpacity>
             <DatePicker
               cancelText={'İptal'}
               title={'Başlangıç Saati Seçiniz'}
@@ -414,9 +408,16 @@ export default function HomeScreen() {
               }}
             />
 
-            {startsTime && <Text>{startsTime.format('HH:mm')}</Text>}
-
-            {endTime && <Text>{endTime.format('HH:mm')}</Text>}
+            <View style={{flexDirection: 'row', marginTop: '8%'}}>
+              <TouchableOpacity style={{marginRight: 15, width: '45%'}} onPress={() => setOpen(true)}>
+                <Text style={styles.modalText1}>BAŞLANGIÇ SAATİ SEÇİNİZ</Text>
+                {startsTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2.5), color: '#333', fontWeight: 'bold'}}>{startsTime.format('HH:mm')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity style={{marginLeft: 15, marginTop: 2, width: '45%'}} onPress={() => setOpenEnd(true)}>
+                <Text style={styles.modalText1}>BİTİŞ SAATİ SEÇİNİZ</Text>
+                {endTime && <Text style={{textAlign: 'center', fontSize: RFPercentage(2.5), color: '#333', fontWeight: 'bold'}}>{endTime.format('HH:mm')}</Text>}
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               onPress={() => saveEvent()}
               style={styles.nexButton}>

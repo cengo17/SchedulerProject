@@ -13,15 +13,11 @@ import {
   StatusBar,
   Pressable,
 } from 'react-native';
-import {Hoshi} from 'react-native-textinput-effects';
-import {RFPercentage} from 'react-native-responsive-fontsize';
-import CalendarPicker from 'react-native-calendar-picker';
-//import {v4 as uuidv4} from 'uuid';
+import {Hoshi,Sae} from 'react-native-textinput-effects';
 import {v4 as uuid} from 'uuid';
 
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
-import {CalendarHeaderForMonthViewProps} from 'react-native-big-calendar/build/components/CalendarHeaderForMonthView';
 export default function HomeScreen() {
   const Mode = {
     type: 'day',
@@ -39,16 +35,22 @@ export default function HomeScreen() {
   const HOUR_COLOR = 'black';
   const BORDERBOTTOMHEADER_COLOR = '#22a199';
   const EVENTCELL_COLOR = '#088ad9';
+  const EVENTTEXT_COLOR = '#fff';
   const [events, setEvents] = useState([]);
   const [changeTime, setChangeTime] = useState('week');
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
+  const [note, setNote] = useState('');
 
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [open, setOpen] = useState(false);
   const [openEnd, setOpenEnd] = useState(false);
-  const [startsTime, setStartTimes] = useState(null);
-  const [endTime, setEndTime] = useState(null);
+  const [startsTime, setStartTimes] = useState(
+    moment().set({minute: 0, second: 0, millisecond: 0}),
+  );
+  const [endTime, setEndTime] = useState(
+    moment().add(1, 'hours').set({minute: 0, second: 0, millisecond: 0}),
+  );
   const minDate = new Date(); // Today
   const maxDate = new Date(2100, 12, 25, 10, 10);
   const [theme, setTheme] = useState({});
@@ -103,6 +105,16 @@ export default function HomeScreen() {
       ]);
       return;
     }
+    if (!note) {
+      Alert.alert('Note seçmelisiniz', null, [
+        {
+          text: 'Tamam',
+          onPress: () => console.log('Kapat'),
+          style: 'cancel',
+        },
+      ]);
+      return;
+    }
     if (!startsTime) {
       Alert.alert('Başlangıç saati seçmelisiniz', null, [
         {
@@ -127,17 +139,18 @@ export default function HomeScreen() {
 
     const start = selectedDate.clone();
     start.set({
-      hour: startsTime.hour(),
+      hour: startsTime.hours(),
       minute: startsTime.minutes(),
     });
-    const end = selectedDate.clone();
 
+    const end = selectedDate.clone();
     end.set({
-      hour: endTime.hour(),
+      hour: endTime.hours(),
       minute: endTime.minutes(),
     });
 
-    console.log(selectedEventId, 'asdasdasdasdasdasd');
+    console.log(start.toDate(), 'start');
+    console.log(end.toDate(), 'end');
 
     if (!selectedEventId) {
       // new event
@@ -146,13 +159,12 @@ export default function HomeScreen() {
         {
           id: uuid(),
           title: name,
-          start,
-          end,
+          detail: note,
+          start: start.toDate(),
+          end: end.toDate(),
         },
       ]);
     } else {
-      // edit event
-
       let selectedEventIndex = events.findIndex(
         event => event.id === selectedEventId,
       );
@@ -162,19 +174,22 @@ export default function HomeScreen() {
         tempArrEvents[selectedEventIndex] = {
           id: tempArrEvents[selectedEventIndex].id,
           title: name,
-          start,
-          end,
+          detail: note,
+          start: start.toDate(),
+          end: end.toDate(),
         };
 
         setEvents([...tempArrEvents]);
       }
-      //event => event.id === selectedEventId,
       setSelectedEventId(null);
     }
 
     setName('');
-    setStartTimes(moment().set({minutes: 0}));
-    setEndTime(moment().add(1, 'hours').set({minutes: 0}));
+    setNote('');
+    setStartTimes(moment().set({minute: 0, second: 0, millisecond: 0}));
+    setEndTime(
+      moment().add(1, 'hours').set({minute: 0, second: 0, millisecond: 0}),
+    );
     setSelectedDate(null);
     setOpenEnd(false);
     setOpen(false);
@@ -188,7 +203,6 @@ export default function HomeScreen() {
         {
           text: 'Düzenle',
           onPress: () => editHandleEvent(currentEvent),
-
           style: 'default',
         },
         {
@@ -223,6 +237,7 @@ export default function HomeScreen() {
     setStartTimes(moment(currentEvent.start));
     setEndTime(moment(currentEvent.end));
     setName(currentEvent.title);
+    setNote(currentEvent.detail);
     setSelectedEventId(currentEvent.id);
   };
 
@@ -235,6 +250,7 @@ export default function HomeScreen() {
     });
     setSelectedDate(currentDate);
     setModalVisible(!modalVisible);
+    // console.log('SELECTED DATE',selectedDate);
   };
 
   useEffect(() => {
@@ -254,18 +270,19 @@ export default function HomeScreen() {
       },
     };
 
-    setTheme({
-      ...darkTheme,
+    setTheme(() => {
+      return {...darkTheme};
     });
     console.log('RRRR', theme);
   }, [changeTime]);
 
-  const formats = {
+  /* const formats = {
     weekdayFormat: (date, culture, localizer) =>
       localizer.format(date, 'dddd', culture),
-  };
+  };*/
   const FONT_SIZE = 28;
-  const darkTheme = {
+
+  /* const darkTheme = {
     palette: {
       primary: {
         main: INDICATOR_COLOR,
@@ -279,7 +296,19 @@ export default function HomeScreen() {
         800: 'black',
       },
     },
-  };
+  };*/
+  const renderEvent = (event, touchableOpacityProps) => (
+    <TouchableOpacity {...touchableOpacityProps}>
+      <Text style={{color: EVENTTEXT_COLOR}}>{event.title}</Text>
+      <Text style={{color: EVENTTEXT_COLOR}}>{`${moment(event.start).format(
+        'HH:mm',
+      )} - ${moment(event.end).format('HH:mm')}`}</Text>
+      <Text numberOfLines={3} style={{color: EVENTTEXT_COLOR}}>
+        {event.detail}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <>
       <View>
@@ -377,10 +406,17 @@ export default function HomeScreen() {
               }}
               onPress={() => {
                 setModalVisible(!modalVisible);
-                setEndTime(moment().add(1, 'hours').set({minutes: 0}));
-                setStartTimes(moment().set({minutes: 0}));
+                setStartTimes(
+                  moment().set({minute: 0, second: 0, millisecond: 0}),
+                );
+                setEndTime(
+                  moment()
+                    .add(1, 'hours')
+                    .set({minute: 0, second: 0, millisecond: 0}),
+                );
                 setSelectedDate(null);
                 setName('');
+                setNote('');
               }}>
               <Image
                 style={{
@@ -395,6 +431,41 @@ export default function HomeScreen() {
               />
               <Text style={styles.modalText}>RANDEVU EKLE</Text>
             </TouchableOpacity>
+            <View
+              style={{
+                width: '90%',
+                marginRight: 'auto',
+                marginLeft: 'auto',
+                marginTop: '2%',
+              }}>
+              <Hoshi
+                label={'Lütfen İsminizi giriniz'}
+                borderColor={'#55C1C3'}
+                autoCapitalize={'words'}
+                animationDuration={15}
+                returnKeyType="done"
+                borderHeight={3}
+                editable={true}
+                labelStyle={{color: '#B7B7B7'}}
+                inputStyle={{
+                  width: '95%',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+                autoCorrect={false}
+                placeholderTextColor="#9A9A9A"
+                inputPadding={16}
+                style={{
+                  color: 'red',
+                  width: '95%',
+                  marginRight: 'auto',
+                  marginLeft: 'auto',
+                }}
+                type={'custom'}
+                value={name}
+                onChangeText={names => setName(names)}
+              />
+            </View>
             <View
               style={{
                 width: '90%',
@@ -424,8 +495,8 @@ export default function HomeScreen() {
                   marginLeft: 'auto',
                 }}
                 type={'custom'}
-                value={name}
-                onChangeText={names => setName(names)}
+                value={note}
+                onChangeText={notes => setNote(notes)}
               />
             </View>
             {/* <Text style={styles.modalText1}>TARİH SEÇİNİZ</Text>*/}
@@ -575,23 +646,12 @@ export default function HomeScreen() {
         }}
         hourStyle={{color: HOUR_COLOR, fontSize: 13, flexWrap: 'nowrap'}}
         eventCellStyle={{backgroundColor: EVENTCELL_COLOR}}
-        //dayHeaderStyle={{backgroundColor: 'blue'}}
         showAllDayEventCell={false}
         moreLabel={true}
         sortedMonthView={{backgroundColor: EVENTCELL_COLOR}}
         showAdjacentMonths={true}
         weekStartsOn={true}
-        //renderHeaderForMonthView
-        //CalendarHeaderForMonthViewProps={{backgroundColor: 'black', textColor: 'white'}}
-        CalendarHeaderForMonthViewProps={({label}) => {
-          return (
-            <View style={{height: 70, backgroundColor: 'black'}}>
-              {console.log(label, 'TUR')}
-            </View>
-          );
-        }}
         showTime={true}
-        // formats={formats}
         hideNowIndicator={true}
         weekDayHeaderHighlightColor={{color: WEEKTEXT_COLOR}}
         theme={theme}
@@ -599,6 +659,7 @@ export default function HomeScreen() {
         locale={'tr'}
         swipeEnabled={true}
         mode={changeTime}
+        renderEvent={renderEvent}
         events={events}
         height={600}
         onPressCell={selectedDate => handleCreateNewEvent(selectedDate)}
